@@ -6,15 +6,31 @@ import java.util.Random;
 public class Main {
     public static final Map<Integer, Integer> sizeToFreq = new HashMap<>();
 
-    public static void main(String[] args) {
-        int lengthOfTheRout = 100;
+    public static void main(String[] args) throws InterruptedException {
+        int lengthOfTheRoute = 100;
         int routesNumber = 1000;
+        Thread printMax = new Thread(() -> {
+            while (!Thread.interrupted()) {
+                synchronized (sizeToFreq) {
+                    try {
+                        sizeToFreq.wait();
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                    Optional<Map.Entry<Integer, Integer>> maxOptional = sizeToFreq.entrySet()
+                            .stream()
+                            .max(Map.Entry.comparingByValue());
+                    Map.Entry<Integer, Integer> max = maxOptional.get();
+                    System.out.println("Самое частое количество поворотов направо на маршруте: " + max.getKey() + " (встретилось " + max.getValue() + " раз)");
+                }
+            }
+        });
+        printMax.start();
         for (int i = 0; i < routesNumber; i++) {
-//            int finalI = i;
-            new Thread(new Runnable() {
+            Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String route = generateRoute("RLRFR", lengthOfTheRout);
+                    String route = generateRoute("RLRFR", lengthOfTheRoute);
                     int n = (int) route.chars()
                             .filter(ch -> ch == 'R')
                             .count();
@@ -24,15 +40,15 @@ public class Main {
                         } else {
                             sizeToFreq.put(n, 1);
                         }
+                        sizeToFreq.notify();
                     }
                 }
-            }).start();
+            });
+            thread.start();
+            thread.join();
         }
-        Optional<Map.Entry<Integer, Integer>> maxOptional = sizeToFreq.entrySet()
-                .stream()
-                .max(Map.Entry.comparingByValue());
-        Map.Entry<Integer, Integer> max = maxOptional.get();
-        System.out.println("Самое частое количество поворотов направо на маршруте: " + max.getKey() + " (встретилось " + max.getValue() + " раз)");
+        printMax.interrupt();
+        printMax.join();
         System.out.println("Другие количества поворотов направо на маршруте:");
         sizeToFreq.forEach((key, value) -> System.out.println("Количество поворотов направо на маршруте: " + key + ". Количество маршрутов с таким числом поворотов направо: " + value));
     }
