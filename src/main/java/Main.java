@@ -9,7 +9,6 @@ public class Main {
     public static void main(String[] args) {
         int lengthOfTheRout = 100;
         int routesNumber = 1000;
-//        sizeToFreq.put(0, 0);
         for (int i = 0; i < routesNumber; i++) {
 //            int finalI = i;
             new Thread(new Runnable() {
@@ -19,7 +18,6 @@ public class Main {
                     int n = (int) route.chars()
                             .filter(ch -> ch == 'R')
                             .count();
-//                    System.out.println("Маршрут " + (finalI + 1) + " Поворотов направо:" + n);
                     synchronized (sizeToFreq) {
                         if (sizeToFreq.containsKey(n)) {
                             sizeToFreq.put(n, sizeToFreq.get(n) + 1);
